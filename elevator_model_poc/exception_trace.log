@@ -1,0 +1,16 @@
+
+simulation: system execution failed.
+Following is the set of recorded exceptions:
+
+-------------------------------------------------------------------------------
+Class / Object      Routine                Nature of exception           Effect
+-------------------------------------------------------------------------------
+ELEVATOR_THREAD     launch @1              thread_capable:              
+<000000000361B848>  (From THREAD)          Precondition violated.        Fail
+-------------------------------------------------------------------------------
+APPLICATION         make @8                                             
+<000000000361B5A8>                         Routine failure.              Fail
+-------------------------------------------------------------------------------
+APPLICATION         root's creation                                     
+<000000000361B5A8>                         Routine failure.              Exit
+-------------------------------------------------------------------------------
