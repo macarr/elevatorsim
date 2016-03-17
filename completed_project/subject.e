@@ -25,4 +25,31 @@ feature --Update
 		end
 	end
 
+	add_observer(o: OBSERVER)
+	require
+		initialized: observers /= Void
+	do
+		observers.extend (o)
+	ensure
+		added: observers.count = old observers.count + 1
+	end
+
+	remove_observer(o: OBSERVER)
+	require
+		initialized: observers /= Void
+		has_observer: observers.count > 0
+	do
+		from
+			observers.start
+		until
+			observers.off
+		loop
+			if observers.item = o then
+				observers.remove
+			end
+		end
+	ensure
+		removed: observers.count = old observers.count - 1
+	end
+
 end
