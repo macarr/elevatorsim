@@ -26,6 +26,8 @@ feature {ANY} -- state
 feature {NONE} --Make
 
 	make(max: INTEGER)
+	require
+		more_than_one_floor: max > 1
 	do
 		motor := 0
 		mode := 0
