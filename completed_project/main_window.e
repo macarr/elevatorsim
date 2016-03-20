@@ -32,6 +32,13 @@ inherit
 create
 	default_create
 
+feature {NONE} -- General Configuration Variables
+
+	floors: INTEGER
+	up_buttons: ARRAY[EL_BUTTON]
+	down_buttons: ARRAY[EL_BUTTON]
+	dest_buttons: ARRAY[EL_BUTTON]
+
 feature {NONE} -- Initialization
 
 	create_interface_objects
@@ -45,8 +52,27 @@ feature {NONE} -- Initialization
 			create file_menu.make_with_text (Menu_file_item)
 				-- Create help menu.
 			create help_menu.make_with_text (Menu_help_item)
+				-- Create floor display
+			create status_panel
+				-- Create elevator interior org box
+			create elevator_interior_box
+				-- Create building display org box
+			create building_box
+				-- Create scrollpanes
+			create building_scroll_area
+			create elevator_interior_scroll_area
 
-			create model.make(12)
+				--create arrays
+				--building floors
+			create building.make_empty
+				--destination buttons
+			create dest_buttons.make_empty
+				--up call buttons
+			create up_buttons.make_empty
+				--down call buttons
+			create down_buttons.make_empty
+			floors := 12
+			create model.make(floors)
 			create thread
 
 		end
@@ -60,6 +86,9 @@ feature {NONE} -- Initialization
 			build_standard_menu_bar
 			set_menu_bar (standard_menu_bar)
 
+
+			build_building_panel
+			build_elevator_interior
 			build_main_container
 			extend (main_container)
 
@@ -80,9 +109,9 @@ feature {NONE} -- Initialization
 			-- Is the window in its default state?
 			-- (as stated in `initialize')
 		do
-			Result := (width = Window_width) and then
-				(height = Window_height) and then
-				(title.is_equal (Window_title))
+			Result := true --(width = Window_width) and then
+			--	(height = Window_height) and then
+		--		(title.is_equal (Window_title))
 		end
 
 
@@ -197,6 +226,121 @@ feature {NONE} -- Implementation, Close event
 			end
 		end
 
+feature {NONE} -- Building Panel Implementation
+
+	building_box: EV_VERTICAL_BOX
+	building: ARRAY[BUILDING_FLOOR]
+
+	build_building_panel
+	local
+		i: INTEGER;
+		floor: BUILDING_FLOOR
+	do
+
+		from
+			i := 0
+		until
+			i = floors
+		loop
+			create floor.default_create
+			floor.set_floor(i + 1)
+			floor.up.select_actions.extend (agent click_up_button(i))
+			up_buttons.force(floor.up, i)
+			floor.down.select_actions.extend (agent click_down_button(i))
+			down_buttons.force(floor.down, i)
+			building.force (floor, i)
+			i := i + 1
+		end
+		from
+			i := building.upper
+		until
+			i < building.lower
+		loop
+			building_box.extend (building[i])
+			i := i - 1
+		end
+	end
+
+feature {NONE} -- Elevator Interior Implementation
+
+	elevator_interior_box: EV_VERTICAL_BOX
+	status_panel: EV_LABEL
+
+	build_elevator_interior
+	local
+		i, j: INTEGER
+		button: EL_BUTTON
+		button_row: EV_HORIZONTAL_BOX
+		dest_buttons_box: EV_VERTICAL_BOX
+	do
+		from
+			i := 0
+		until
+			i = floors
+		loop
+			create button
+			button.set_text((i + 1).out)
+			button.select_actions.extend (agent click_dest_button(i))
+			button.set_minimum_size (50, 50)
+			dest_buttons.force (button, i)
+			i := i + 1
+		end
+		create dest_buttons_box
+		dest_buttons_box.set_padding_width (10)
+		from
+			i := dest_buttons.lower
+		until
+			i > dest_buttons.upper
+		loop
+			create button_row
+			button_row.set_padding_width (10)
+			from
+				j := 0
+			until
+				j = 3 OR i > dest_buttons.upper
+			loop
+				button_row.extend (dest_buttons[i])
+				j := j + 1
+				i := i + 1
+			end
+			dest_buttons_box.put_front (button_row)
+		end
+		status_panel.set_text ("R 0")
+		status_panel.set_foreground_color(create {EV_COLOR}.make_with_8_bit_rgb (0, 255, 0))
+		status_panel.set_background_color(create {EV_COLOR}.make_with_8_bit_rgb (0,0,0))
+		status_panel.set_font (create {EV_FONT}.make_with_values ({EV_FONT_CONSTANTS}.family_typewriter,
+																  {EV_FONT_CONSTANTS}.weight_bold,
+																  {EV_FONT_CONSTANTS}.shape_regular,
+																  36))
+		elevator_interior_box.extend (status_panel)
+		elevator_interior_box.extend (dest_buttons_box)
+
+	end
+
+	click_up_button(floor: INTEGER)
+	require
+		valid_floor: building.upper >= floor AND building.lower <= floor
+	do
+		up_buttons[floor].activate
+		--status_panel.set_text ("up " + (floor+1).out)
+	end
+
+	click_down_button(floor: INTEGER)
+	require
+		valid_floor: building.upper >= floor AND building.lower <= floor
+	do
+		down_buttons[floor].activate
+		--status_panel.set_text ("down " + (floor+1).out)
+	end
+
+	click_dest_button(floor: INTEGER)
+	require
+		valid_floor: building.upper >= floor AND building.lower <= floor
+	do
+		dest_buttons[floor].activate
+		--status_panel.set_text ("dest " + (floor+1).out)
+	end
+
 feature {NONE} -- Thread Implementation
 
 	model: ELEVATOR_MODEL
@@ -205,28 +349,39 @@ feature {NONE} -- Thread Implementation
 	set_up_model_and_controller
 	do
 		model.add_observer (Current)
-		--thread.attach_destination_buttons (dest_buttons)
-		--thread.attach_down_buttons (down_buttons)
-		--thread.attach_up_buttons (up_buttons)
-		--thread.attach_model (model)
-		--thread.ready_gui
-		--thread.model_ok
-		--if thread.gui_attached and thread.model_valid then
-		--	thread.launch
-		--else
-
-		--end
+		thread.attach_destination_buttons (dest_buttons)
+		thread.attach_down_buttons (down_buttons)
+		thread.attach_up_buttons (up_buttons)
+		thread.attach_model (model)
+		thread.ready_gui
+		thread.model_ok
+		if thread.gui_attached and thread.model_valid then
+			thread.launch
+		else
+			status_panel.set_text ("FAIL")
+		end
 	end
 
 feature {NONE} -- Implementation
 
-	main_container: EV_VERTICAL_BOX
+	main_container: EV_HORIZONTAL_BOX
 			-- Main container (contains all widgets displayed in this window).
+	building_scroll_area: EV_SCROLLABLE_AREA
+			-- Scrollable area for holding building representation
+	elevator_interior_scroll_area: EV_SCROLLABLE_AREA
+			-- Scrollable area for holding elevator interior representation
+
+
 
 	build_main_container
 			-- Populate `main_container'.
 		do
-			main_container.extend (create {EV_TEXT})
+			building_scroll_area.set_minimum_size (200, 600)
+			building_scroll_area.extend (building_box)
+			elevator_interior_scroll_area.set_minimum_size (200, 600)
+			elevator_interior_scroll_area.extend (elevator_interior_box)
+			main_container.extend (building_scroll_area)
+			main_container.extend (elevator_interior_scroll_area)
 		ensure
 			main_container_created: main_container /= Void
 		end
@@ -234,8 +389,18 @@ feature {NONE} -- Implementation
 feature {NONE} -- observer pattern
 
 	notify
+	local s: STRING
 	do
-
+		s := ""
+		if model.mode = model.mode_ascending then
+			s := "U "
+		elseif model.mode = model.mode_descending then
+			s := "D "
+		elseif model.mode = model.mode_resting then
+			s := "R "
+		end
+		s := s + (model.floor+1).out
+		status_panel.set_text (s)
 	end
 
 feature {NONE} -- Implementation / Constants

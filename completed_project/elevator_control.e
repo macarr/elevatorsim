@@ -66,6 +66,7 @@ feature -- Execution
 	do
 		create t.make_now
 		last_tick := t.nano_second
+		elevator.update -- make sure GUI is up to date
 		--start resting set
 		from
 		until up_rider_waiting or target_above -- we are at the bottom floor, these are all we have to consider
@@ -93,7 +94,7 @@ feature -- Execution
 			from
 			until not target_above
 			loop
-				elevator.travel --arrive + depart
+				travel --arrive + depart
 				if up_rider_waiting or at_destination then --process
 					motor_stop
 					open_elevator_doors
@@ -106,7 +107,7 @@ feature -- Execution
 				end
 			end
 			--no more targets above us, time to descend
-			--descendin set
+			--descending set
 			enter_descend_mode
 			--first answer any up calls on our current floor
 			--(no destination, as we can only enter from rest
@@ -122,7 +123,7 @@ feature -- Execution
 			until not target_below
 			loop
 				--floor
-				elevator.travel --arrive + depart
+				travel --arrive + depart
 				if down_rider_waiting or at_destination then --process
 					motor_stop
 					open_elevator_doors
@@ -140,13 +141,15 @@ feature -- Execution
 			--floor and wait for orders)
 			if not (target_above or up_rider_waiting) then
 				enter_rest_mode
-				motor_descend
+				if not is_descending then -- this is less than optimal
+					motor_descend
+				end
 			end
 			--descend until we hit bottom floor or get another order
 			from
 			until target_above or target_below or up_rider_waiting or down_rider_waiting or at_destination or elevator.floor = 0
 			loop
-				elevator.travel
+				travel
 			end
 			--we've either hit the bottom floor or recieved another order.
 			--In either case, we stop the motor to properly process our
@@ -243,7 +246,7 @@ feature -- elevator logic
 	rest
 	require
 		is_resting
-		bottom_floor: elevator.floor = 1
+		bottom_floor: elevator.floor = 0
 	do
 		wait_for_next_tick
 	end
@@ -352,7 +355,7 @@ feature -- elevator model queries
 		from
 			i := elevator.floor + 1
 		until
-			i > elevator.max_floor
+			i = elevator.max_floor
 		loop
 			if dest_buttons[i].is_active or down_buttons[i].is_active or up_buttons[i].is_active then
 				Result := true
@@ -369,7 +372,7 @@ feature -- elevator model queries
 		from
 			i := elevator.floor - 1
 		until
-			i = 0
+			i < 0
 		loop
 			if dest_buttons[i].is_active or down_buttons[i].is_active or up_buttons[i].is_active then
 				Result := true
@@ -405,6 +408,12 @@ feature -- elevator model queries
 	end
 
 feature --model updates with ticks
+
+	travel
+	do
+		elevator.travel
+		wait_for_next_tick
+	end
 
 	enter_ascend_mode
 	do

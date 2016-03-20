@@ -52,39 +52,39 @@ feature {ANY} -- Setters w/ observer update
 
 	stop_motor
 	require
-		travelling: motor /= 0
+		travelling: motor /= motor_stop
 	do
-		motor := 0
+		motor := motor_stop
 		update
 	ensure
-		stopped: motor = 0
+		stopped: motor = motor_stop
 	end
 
 	motor_start_up
 	require
-		stopped: motor = 0
+		stopped: motor = motor_stop
 		not doors_open
 	do
-		motor := 1
+		motor := motor_up
 		update
 	ensure
-		moving_up: motor = 1
+		moving_up: motor = motor_up
 	end
 
 	motor_start_down
 	require
-		stopped: motor = 0
+		stopped: motor = motor_stop
 		not doors_open
 	do
-		motor := 2
+		motor := motor_down
 		update
 	ensure
-		moving_down: motor = -1
+		moving_down: motor = motor_down
 	end
 
 	open_doors
 	require
-		stopped: motor = 0
+		stopped: motor = motor_stop
 		not doors_open
 	do
 		doors_open := true
@@ -105,43 +105,43 @@ feature {ANY} -- Setters w/ observer update
 
 	travel
 	require
-		not_stopped: motor > 0
+		not_stopped: motor /= motor_stop
 	do
 		floor := floor + motor
 		update
 	ensure
 		in_building: floor >= 0 and floor <= max_floor
-		moved: floor = floor + 1 or floor = floor - 1
+		moved: floor = old floor + 1 or floor = old floor - 1
 	end
 
 	begin_ascending
 	require
-		not_ascending: mode /= 1
+		not_ascending: mode /= mode_ascending
 	do
-		mode := 1
+		mode := mode_ascending
 		update
 	ensure
-		ascending: mode = 1
+		ascending: mode = mode_ascending
 	end
 
 	begin_descending
 	require
-		not_ascending: mode /= 2
+		not_descending: mode /= mode_descending
 	do
-		mode := 2
+		mode := mode_descending
 		update
 	ensure
-		descending: mode = 2
+		descending: mode = mode_descending
 	end
 
 	begin_resting
 	require
-		not_resting: mode /= 0
+		not_resting: mode /= mode_resting
 	do
-		mode := 0
+		mode := mode_resting
 		update
 	ensure
-		resting: mode = 0
+		resting: mode = mode_resting
 	end
 
 invariant
