@@ -22,6 +22,13 @@ inherit
 			default_create, copy
 		end
 
+	OBSERVER
+		undefine
+			default_create, copy
+		redefine
+			notify
+		end
+
 create
 	default_create
 
@@ -38,6 +45,9 @@ feature {NONE} -- Initialization
 			create file_menu.make_with_text (Menu_file_item)
 				-- Create help menu.
 			create help_menu.make_with_text (Menu_help_item)
+
+			create model.make(12)
+			create thread
 
 		end
 
@@ -62,6 +72,8 @@ feature {NONE} -- Initialization
 
 				-- Set the initial size of the window.
 			set_size (Window_width, Window_height)
+
+			set_up_model_and_controller
 		end
 
 	is_in_default_state: BOOLEAN
@@ -175,7 +187,7 @@ feature {NONE} -- Implementation, Close event
 			if question_dialog.selected_button ~ (create {EV_DIALOG_CONSTANTS}).ev_ok then
 					-- Destroy the window.
 				destroy
-				
+
 					-- End the application.
 					--| TODO: Remove next instruction if you don't want the application
 					--|       to end when the first window is closed..
@@ -184,6 +196,27 @@ feature {NONE} -- Implementation, Close event
 				end
 			end
 		end
+
+feature {NONE} -- Thread Implementation
+
+	model: ELEVATOR_MODEL
+	thread: ELEVATOR_CONTROL
+
+	set_up_model_and_controller
+	do
+		model.add_observer (Current)
+		--thread.attach_destination_buttons (dest_buttons)
+		--thread.attach_down_buttons (down_buttons)
+		--thread.attach_up_buttons (up_buttons)
+		--thread.attach_model (model)
+		--thread.ready_gui
+		--thread.model_ok
+		--if thread.gui_attached and thread.model_valid then
+		--	thread.launch
+		--else
+
+		--end
+	end
 
 feature {NONE} -- Implementation
 
@@ -197,6 +230,13 @@ feature {NONE} -- Implementation
 		ensure
 			main_container_created: main_container /= Void
 		end
+
+feature {NONE} -- observer pattern
+
+	notify
+	do
+
+	end
 
 feature {NONE} -- Implementation / Constants
 

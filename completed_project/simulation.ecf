@@ -8,7 +8,9 @@
 		<setting name="concurrency" value="thread"/>
 		<precompile name="vision2-mt-safe_precompile" location="$ISE_EIFFEL\precomp\spec\win64\vision2-mt-safe.ecf"/>
 		<library name="base" location="$ISE_LIBRARY\library\base\base-safe.ecf"/>
+		<library name="espec" location="$ISE_LIBRARY\contrib\library\testing\framework\espec\library\espec-safe.ecf"/>
 		<library name="thread" location="$ISE_LIBRARY\library\thread\thread-safe.ecf"/>
+		<library name="time" location="$ISE_LIBRARY\library\time\time-safe.ecf"/>
 		<library name="vision2" location="$ISE_LIBRARY\library\vision2\vision2-safe.ecf"/>
 		<cluster name="root_cluster" location=".\" recursive="true">
 			<file_rule>
@@ -16,6 +18,15 @@
 				<exclude>/CVS$</exclude>
 				<exclude>/EIFGENs$</exclude>
 			</file_rule>
+			<file_rule>
+				<exclude>^tests$</exclude>
+			</file_rule>
+			<tests name="simulation_tests" location="D:\Projects\School\Capstone\simulation\completed_project\simulation_tests\"/>
 		</cluster>
+	</target>
+	<target name="run_tests">
+		<root all_classes="true"/>
+		<setting name="concurrency" value="thread"/>
+		<cluster name="completed_project" location="D:\Projects\School\Capstone\simulation\completed_project\" recursive="true"/>
 	</target>
 </system>

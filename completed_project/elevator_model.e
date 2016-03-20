@@ -23,16 +23,27 @@ feature {ANY} -- state
 		--Max floor: highest floor in building
 	max_floor: INTEGER
 
+feature {ANY} -- constants
+
+	--Motor
+	motor_stop: INTEGER = 0
+	motor_up: INTEGER = 1
+	motor_down: INTEGER = -1
+	--Mode
+	mode_resting: INTEGER = 0
+	mode_ascending: INTEGER = 1
+	mode_descending: INTEGER = 2
+
 feature {NONE} --Make
 
 	make(max: INTEGER)
 	require
-		more_than_one_floor: max > 1
+		more_than_one_floor: max >= 1
 	do
-		motor := 0
-		mode := 0
+		motor := motor_stop
+		mode := mode_resting
 		doors_open := false
-		floor := 1
+		floor := 0
 		max_floor := max
 		create observers.make
 	end
@@ -99,7 +110,7 @@ feature {ANY} -- Setters w/ observer update
 		floor := floor + motor
 		update
 	ensure
-		in_building: floor >= 1 and floor <= max_floor
+		in_building: floor >= 0 and floor <= max_floor
 		moved: floor = floor + 1 or floor = floor - 1
 	end
 
@@ -134,7 +145,7 @@ feature {ANY} -- Setters w/ observer update
 	end
 
 invariant
-	in_building: 1 <= floor and floor <= max_floor
+	in_building: 0 <= floor and floor <= max_floor
 	safe_doors: not (doors_open and motor /= 0)
 
 end
