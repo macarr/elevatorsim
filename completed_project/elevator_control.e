@@ -236,6 +236,10 @@ feature -- configure thread
 		model_attached
 	end
 
+	--validate model
+		--ensure that we have attached the gui objects
+		--ensure that we have attached the model
+		--ensure that the model is consistent with the gui
 	model_ok
 	do
 		if gui_attached and model_attached then
@@ -253,70 +257,6 @@ feature -- elevator logic
 		bottom_floor: elevator.floor = 0
 	do
 		wait_for_next_tick
-	end
-
-	--update mode based on logic specified in requirements doc (see Table 8)
-	update_mode
-	require
-		valid_mode: -1 <= elevator.mode and elevator.mode <= 1
-	do
-		if is_resting then
-			if up_rider_waiting or target_above then
-				enter_ascend_mode
-			elseif down_rider_waiting or target_below then
-				enter_descend_mode
-			end
-		elseif is_ascending then
-			if not (up_rider_waiting or target_above) then
-				if down_rider_waiting or target_below then
-					enter_descend_mode
-				else
-					enter_rest_mode
-				end
-			end
-		elseif is_descending then
-			if not (down_rider_waiting or target_below) then
-				if up_rider_waiting or target_above then
-					enter_ascend_mode
-				else
-					enter_rest_mode
-				end
-			end
-		end
-	ensure
-		valid_mode: -1 <= elevator.mode and elevator.mode <= 1
-	end
-
-	--update motor based on logic specified in requirements doc (see Table 3)
-	update_motor
-	do
-		if not elevator.doors_open then
-			if is_resting then
-				if elevator.floor > 1 then
-					if motor_stopped then
-						motor_descend
-					elseif motor_up then
-						motor_stop
-					end
-				else
-					if not motor_stopped then
-						motor_stop
-					end
-				end
-			elseif is_ascending then
-				if motor_stopped then
-					motor_ascend
-				elseif motor_down then
-					motor_stop
-				end
-			elseif is_descending then
-				if motor_stopped then
-					motor_descend
-				elseif motor_up then
-					motor_stop
-				end
-			end
-		end
 	end
 
 feature -- elevator model queries
@@ -414,81 +354,126 @@ feature -- elevator model queries
 feature --model updates with ticks
 
 	travel
+	require
+		model_attached
 	do
 		elevator.travel
 		wait_for_next_tick
+	ensure
+		elevator.floor /= old elevator.floor
 	end
 
 	enter_ascend_mode
+	require
+		model_attached
 	do
 		elevator.begin_ascending
 		wait_for_next_tick
+	ensure
+		elevator.mode = elevator.mode_ascending
 	end
 
 	enter_descend_mode
+	require
+		model_attached
 	do
 		elevator.begin_descending
 		wait_for_next_tick
+	ensure
+		elevator.mode = elevator.mode_descending
 	end
 
 	enter_rest_mode
+	require
+		model_attached
 	do
 		elevator.begin_resting
 		wait_for_next_tick
+	ensure
+		elevator.mode = elevator.mode_resting
 	end
 
 	close_elevator_doors
+	require
+		model_attached
 	do
 		elevator.close_doors
 		wait_for_next_tick
+	ensure
+		not elevator.doors_open
 	end
 
 	open_elevator_doors
+	require
+		model_attached
 	do
 		elevator.open_doors
 		wait_for_next_tick
+	ensure
+		elevator.doors_open
 	end
 
 	turn_off_up_call(btn: INTEGER)
 	require
+		gui_attached
 		valid_button: up_buttons.lower <= btn and btn <= up_buttons.upper
 	do
 		up_buttons[btn].deactivate
 		wait_for_next_tick
+	ensure
+		not up_buttons[btn].is_active
 	end
 
 	turn_off_down_call(btn: INTEGER)
 	require
+		gui_attached
 		valid_button: down_buttons.lower <= btn and btn <= down_buttons.upper
 	do
 		down_buttons[btn].deactivate
 		wait_for_next_tick
+	ensure
+		not down_buttons[btn].is_active
 	end
 
 	turn_off_dest_button(btn: INTEGER)
 	require
+		gui_attached
 		valid_button: dest_buttons.lower <= btn and btn <= dest_buttons.upper
 	do
 		dest_buttons[btn].deactivate
 		wait_for_next_tick
+	ensure
+		not dest_buttons[btn].is_active
 	end
 
 	motor_stop
+	require
+		model_attached
 	do
 		elevator.stop_motor
 		wait_for_next_tick
+	ensure
+		stopped: elevator.motor = elevator.motor_stop
 	end
 
 	motor_ascend
+	require
+		model_attached
 	do
 		elevator.motor_start_up
 		wait_for_next_tick
+	ensure
+		ascending: elevator.motor = elevator.motor_up
 	end
 
 	motor_descend
+	require
+		model_attached
 	do
 		elevator.motor_start_down
 		wait_for_next_tick
+	ensure
+		descending: elevator.motor = elevator.motor_down
 	end
 
 feature --tick
