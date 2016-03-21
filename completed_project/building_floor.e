@@ -23,6 +23,9 @@ feature {ANY} --fields
 	up: EL_BUTTON
 	down: EL_BUTTON
 	elevator: EV_PIXMAP
+	elevator_at: EV_PIXMAP
+	elevator_nat: EV_PIXMAP
+	elevator_open: EV_PIXMAP
 	button_box: EV_VERTICAL_BOX
 	uparrow: EV_PIXMAP
 	downarrow: EV_PIXMAP
@@ -35,6 +38,9 @@ feature {NONE}--make
 			create up
 			create down
 			create elevator
+			create elevator_at
+			create elevator_nat
+			create elevator_open
 			create button_box
 			create uparrow
 			create downarrow
@@ -43,16 +49,26 @@ feature {NONE}--make
 		do
 			Precursor {EV_HORIZONTAL_BOX}
 			floor := 0
-			set_border_width(5)
+			set_border_width(0)
 			floor_label.set_text (floor.out)
-			floor_label.set_minimum_width (150)
-			floor_label.set_background_color (create {EV_COLOR}.make_with_8_bit_rgb(99,77,2))
+			floor_label.set_minimum_width (30)
+			floor_label.set_background_color (create {EV_COLOR}.make_with_8_bit_rgb(255,215,0))
+			floor_label.set_font (create {EV_FONT}.make_with_values ({EV_FONT_CONSTANTS}.family_typewriter,
+																  {EV_FONT_CONSTANTS}.weight_bold,
+																  {EV_FONT_CONSTANTS}.shape_regular,
+																  20))
 			uparrow.set_with_named_file("uparrow.png")
 			up.set_pixmap (uparrow)
 			downarrow.set_with_named_file("downarrow.png")
 			down.set_pixmap (downarrow)
-			elevator.set_with_named_file ("elev.png")
-			elevator.set_minimum_size (50,30)
+			elevator_at.set_with_named_file ("elev_at.png")
+			elevator_at.set_minimum_size (60, 75)
+			elevator_nat.set_with_named_file ("elev_nat.png")
+			elevator_nat.set_minimum_size (60, 75)
+			elevator_open.set_with_named_file ("elev_open.png")
+			elevator_open.set_minimum_size(60, 75)
+			elevator.copy (elevator_nat)
+			elevator.set_minimum_size(60, 75)
 			button_box.extend(up)
 			button_box.extend(down)
 			extend(floor_label)
@@ -76,17 +92,20 @@ feature {ANY} -- public methods
 
 	elevator_left
 	do
-		--TODO
+		elevator.copy(elevator_nat)
+		refresh_now
 	end
 
 	elevator_entered
 	do
-		--TODO
+		elevator.copy(elevator_at)
+		refresh_now
 	end
 
 	elevator_opened_doors
 	do
-		--TODO
+		elevator.copy(elevator_open)
+		refresh_now
 	end
 
 

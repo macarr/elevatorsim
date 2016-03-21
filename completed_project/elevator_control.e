@@ -69,7 +69,7 @@ feature -- Execution
 		elevator.update -- make sure GUI is up to date
 		--start resting set
 		from
-		until up_rider_waiting or target_above -- we are at the bottom floor, these are all we have to consider
+		until up_rider_waiting or target_above or at_destination -- we are at the bottom floor, these are all we have to consider
 		loop
 			rest
 		end
@@ -82,7 +82,7 @@ feature -- Execution
 			--first answer any up calls on our current floor
 			--(no destination, as we can only enter from rest
 			--or having already answered all down destination calls
-			if up_rider_waiting then
+			if up_rider_waiting or at_destination then
 				open_elevator_doors
 				up_buttons[elevator.floor].deactivate
 				dest_buttons[elevator.floor].deactivate
@@ -114,7 +114,7 @@ feature -- Execution
 			--first answer any up calls on our current floor
 			--(no destination, as we can only enter from rest
 			--or having already answered all up destination calls
-			if down_rider_waiting then
+			if down_rider_waiting or at_destination then
 				open_elevator_doors
 				down_buttons[elevator.floor].deactivate
 				dest_buttons[elevator.floor].deactivate
@@ -143,26 +143,17 @@ feature -- Execution
 			--if there are no people wanting to go up on this floor or
 			--new targets above us, we start resting (travel to bottom
 			--floor and wait for orders)
-			if not (target_above or up_rider_waiting) then
+			if not outstanding_call then --make doubly certain we have no call to answer
 				enter_rest_mode
-				if not is_descending then -- this is less than optimal
-					motor_descend
-				end
-			end
-			--descend until we hit bottom floor or get another order
-			from
-			until target_above or target_below or up_rider_waiting or down_rider_waiting or at_destination or elevator.floor = 0
-			loop
-				travel
-			end
-			--we've either hit the bottom floor or recieved another order.
-			--In either case, we stop the motor to properly process our
-			--next instruction
-			motor_stop
-			--if we hit the bottom floor, wait for orders
-			if elevator.floor = 0 then
+				motor_descend
 				from
-				until up_rider_waiting or target_above
+				until elevator.floor = 0 or outstanding_call
+				loop
+					travel
+				end
+				motor_stop
+				from
+				until outstanding_call
 				loop
 					rest
 				end
@@ -349,6 +340,12 @@ feature -- elevator model queries
 	at_destination: BOOLEAN
 	do
 		Result := dest_buttons[elevator.floor].is_active
+	end
+
+	-- is there any outstanding call?
+	outstanding_call: BOOLEAN
+	do
+		Result := at_destination or down_rider_waiting or up_rider_waiting or target_above or target_below
 	end
 
 feature --model updates with ticks

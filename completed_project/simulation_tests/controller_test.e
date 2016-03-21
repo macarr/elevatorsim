@@ -10,6 +10,11 @@ inherit
 	ES_TEST
 create make
 
+feature -- Feature under test
+
+controller: ELEVATOR_CONTROL
+model: ELEVATOR_MODEL
+
 feature -- Creation
 
 make
