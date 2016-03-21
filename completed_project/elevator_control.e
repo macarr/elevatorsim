@@ -88,7 +88,9 @@ feature -- Execution
 				dest_buttons[elevator.floor].deactivate
 				close_elevator_doors
 			end
-			motor_ascend
+			if target_above then
+				motor_ascend
+			end
 			--no between sets, we've abstracted out between-floor travel
 			--floor(m)
 			from
@@ -118,7 +120,9 @@ feature -- Execution
 				dest_buttons[elevator.floor].deactivate
 				close_elevator_doors
 			end
-			motor_descend
+			if target_below then
+				motor_descend
+			end
 			from
 			until not target_below
 			loop

@@ -24,6 +24,8 @@ feature {ANY} --fields
 	down: EL_BUTTON
 	elevator: EV_PIXMAP
 	button_box: EV_VERTICAL_BOX
+	uparrow: EV_PIXMAP
+	downarrow: EV_PIXMAP
 
 
 feature {NONE}--make
@@ -34,6 +36,8 @@ feature {NONE}--make
 			create down
 			create elevator
 			create button_box
+			create uparrow
+			create downarrow
 		end
 	initialize
 		do
@@ -43,8 +47,10 @@ feature {NONE}--make
 			floor_label.set_text (floor.out)
 			floor_label.set_minimum_width (150)
 			floor_label.set_background_color (create {EV_COLOR}.make_with_8_bit_rgb(99,77,2))
-			up.set_text("up")
-			down.set_text("down")
+			uparrow.set_with_named_file("uparrow.png")
+			up.set_pixmap (uparrow)
+			downarrow.set_with_named_file("downarrow.png")
+			down.set_pixmap (downarrow)
 			elevator.set_with_named_file ("elev.png")
 			elevator.set_minimum_size (50,30)
 			button_box.extend(up)
