@@ -34,13 +34,21 @@ feature {NONE} -- Creation
 	end
 
 feature
+--here we implement the BUTTON-SERVICE portion of the design doc
+--the Button-0 and Button-1 proceses are implemented by EiffelVision's
+--button library. An on-click action is added to each button, which
+--calls the activate method (read B2). ELEVATOR_CONTROL directly
+--deactivates buttons it is servicing, approximating the read/write
+--of O
 
+	--read B2
 	activate
 	do
 		active := true
 		set_background_color(active_colour)
 	end
 
+	--read O
 	deactivate
 	do
 		active := false

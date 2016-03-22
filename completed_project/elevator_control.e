@@ -59,6 +59,10 @@ feature -- Execution
 	end
 
 	--main execution loop
+	--this is specified in the ELEVATOR_CONTROL portion of the design document
+	--This implementation differs slightly in structure - the design doc expects the elevator to
+	--always travel upon entering a mode. However, sometimes it is required to answer a call at
+	--the current floor. This is the reason for the pre-loop service calls.
 	execution_loop
 	require
 		gui_attached
@@ -163,6 +167,18 @@ feature -- Execution
 	end
 
 feature -- configure thread
+
+	set_tickrate(rate: DOUBLE)
+	require
+		not_too_fast: rate > 0.1
+	local
+		d: DOUBLE
+	do
+		d := rate * default_tickrate
+		tickrate := d.rounded
+	ensure
+		not_too_fast: tickrate > 100000000
+	end
 
 	--connect destination buttons data channel
 	attach_destination_buttons(buttons: ARRAY[EL_BUTTON])

@@ -35,6 +35,7 @@ create
 feature {NONE} -- General Configuration Variables
 
 	floors: INTEGER
+	tickrate: DOUBLE
 	up_buttons: ARRAY[EL_BUTTON]
 	down_buttons: ARRAY[EL_BUTTON]
 	dest_buttons: ARRAY[EL_BUTTON]
@@ -65,17 +66,41 @@ feature {NONE} -- Initialization
 			create up_buttons.make_empty
 				--down call buttons
 			create down_buttons.make_empty
-			floors := 12
-			create model.make(floors)
+			floors := 0
+			tickrate := 0
+			create model.make(2)
 			create thread
 
 		end
 
 	initialize
 			-- Build the interface for this window.
+		local
+			error_dialog: EV_INFORMATION_DIALOG
 		do
 			Precursor {EV_TITLED_WINDOW}
-			
+
+			from
+			until floors >= 2
+			loop
+				floors := get_num_floors
+				if floors < 2 then
+					create error_dialog.make_with_text ("Invalid number of floors.%NPlease choose an integer number%Ngreater than 2")
+					error_dialog.show_modal_to_window (Current)
+				end
+			end
+			from
+			until tickrate >= 0.1
+			loop
+				tickrate := get_tick_rate
+				if tickrate < 0.1 then
+					create error_dialog.make_with_text ("Invalid tick rate.%NPlease choose a floating point%Nnumber greater than 0.1")
+					error_dialog.show_modal_to_window (Current)
+				end
+			end
+
+			create model.make (floors)
+
 			build_building_panel
 			build_elevator_interior
 			build_main_container
@@ -125,6 +150,36 @@ feature {NONE} -- Implementation, Close event
 				end
 			end
 		end
+
+feature {NONE} -- Implementation, Get Floors
+
+	get_num_floors: INTEGER
+		-- Process user request to close the window.
+	local
+		input_dialog: INPUT_DIALOG
+	do
+		Result := 0
+		create input_dialog
+		input_dialog.show_modal_to_window (Current)
+		if input_dialog.output.is_integer then
+			Result := input_dialog.output.to_integer
+		end
+	end
+
+feature {NONE} -- Implementation, Get tickrate
+
+	get_tick_rate: DOUBLE
+	local
+		input_dialog: INPUT_DIALOG
+	do
+		Result := 0
+		create input_dialog
+		input_dialog.label.set_text("Please input the desired tick%Nrate (in seconds)")
+		input_dialog.show_modal_to_window (Current)
+		if input_dialog.output.is_double then
+			Result := input_dialog.output.to_double
+		end
+	end
 
 feature {NONE} -- Building Panel Implementation
 
@@ -249,6 +304,7 @@ feature {NONE} -- Thread Implementation
 	set_up_model_and_controller
 	do
 		model.add_observer (Current)
+		thread.set_tickrate (tickrate)
 		thread.attach_destination_buttons (dest_buttons)
 		thread.attach_down_buttons (down_buttons)
 		thread.attach_up_buttons (up_buttons)
